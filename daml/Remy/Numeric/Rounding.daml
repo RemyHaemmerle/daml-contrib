@@ -4,6 +4,7 @@ module Remy.Numeric.Rounding
   ( RoundingMode(..)
   , round
   , roundAt
+  , roundDecimalAtInt
   , roundUp
   , roundDown
   , roundCeling
@@ -13,10 +14,13 @@ module Remy.Numeric.Rounding
   , roundHalfCeling
   , roundHalfFloor
   , roundHalfEven
+  , roundUnnecessary
   ) where
 
 import DA.Numeric
-import Prelude hiding 
+import qualified DA.Map as M
+import qualified DA.Optional as O
+import Prelude hiding
   ( Down
   , round
   -- include the following lines for Daml 2.8.x
@@ -24,7 +28,7 @@ import Prelude hiding
   -- , RoundingUp
   -- , RoundingDown
   -- , RoundingCeling
-  -- , RoundingFloor 
+  -- , RoundingFloor
   -- , RoundingHalfUp
   -- , RoundingHalfDown
   -- , RoundingHalfEven
@@ -32,11 +36,11 @@ import Prelude hiding
   )
 
 
-data RoundingMode = 
+data RoundingMode =
     RoundingUp
   | RoundingDown
   | RoundingCeling
-  | RoundingFloor 
+  | RoundingFloor
   | RoundingHalfUp
   | RoundingHalfDown
   | RoundingHalfEven
@@ -52,78 +56,128 @@ roundHalfEven : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Num
 roundHalfEven = castAndRound
 
 roundCeling : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
-roundCeling x = 
+roundCeling x =
     if (x <= cast r) then
       r
-    else 
+    else
       r + shift one0
   where
-    r = roundHalfEven @m @n x
+    r = roundHalfEven x
 
 roundFloor : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
-roundFloor x = 
+roundFloor x =
     if (cast r <= x) then
       r
-    else 
+    else
       r - shift one0
   where
-    r = roundHalfEven @m @n x
+    r = roundHalfEven x
 
 roundUp : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
 roundUp x =
   if (cast zero0 <= x) then
     roundCeling x
-  else 
+  else
     roundFloor x
 
 roundDown : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
 roundDown x =
   if (cast zero0 <= x) then
     roundFloor x
-  else 
+  else
     roundCeling x
 
 roundHalfCeling: forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
 roundHalfCeling x =
     if (x <= cast r) then
       r
-    else 
+    else
       roundHalfEven (x + shift one0)
-  where 
-    r = roundHalfEven @m @n x
+  where
+    r = roundHalfEven x
 
 roundHalfFloor: forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
 roundHalfFloor x =
     if (cast r <= x) then
       r
-    else 
+    else
       roundHalfEven (x - shift one0)
-  where 
-    r = roundHalfEven @m @n x
+  where
+    r = roundHalfEven x
 
 roundHalfUp : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
 roundHalfUp x =
   if (cast zero0 <= x) then
     roundHalfCeling x
-  else 
+  else
     roundHalfFloor x
 
 roundHalfDown : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
 roundHalfDown x =
   if (cast zero0 <= x) then
     roundFloor x
-  else 
+  else
     roundCeling x
 
+roundUnnecessary : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundUnnecessary x = cast (cast @m x)
+
+
 round : forall m n. (NumericScale m, NumericScale n) => RoundingMode -> Numeric n -> Numeric m
-round RoundingUp = roundUp 
+round RoundingUp = roundUp
 round RoundingDown = roundDown
 round RoundingCeling = roundCeling
 round RoundingFloor = roundFloor
 round RoundingHalfUp = roundHalfUp
 round RoundingHalfDown = roundHalfDown
-round RoundingHalfEven = roundHalfEven 
-round RoundingUnnecessary = cast
+round RoundingHalfEven = roundHalfEven
+round RoundingUnnecessary = roundUnnecessary
 
 roundAt : forall m n. (NumericScale m, NumericScale n) => RoundingMode -> Numeric n -> Numeric n
-roundAt m x = cast $ round @m m x
+roundAt mode x = cast $ round @m mode x
+
+roundDecimalMap: M.Map Int (RoundingMode -> Decimal-> Decimal)
+roundDecimalMap = M.fromList
+  [ (0, roundAt @0)
+  , (1, roundAt @1)
+  , (2, roundAt @2)
+  , (3, roundAt @3)
+  , (4, roundAt @4)
+  , (5, roundAt @5)
+  , (6, roundAt @6)
+  , (7, roundAt @7)
+  , (8, roundAt @8)
+  , (9, roundAt @9)
+  , (10, roundAt @10)
+  , (11, roundAt @11)
+  , (12, roundAt @12)
+  , (13, roundAt @13)
+  , (14, roundAt @14)
+  , (15, roundAt @15)
+  , (16, roundAt @16)
+  , (17, roundAt @17)
+  , (18, roundAt @18)
+  , (19, roundAt @19)
+  , (20, roundAt @20)
+  , (21, roundAt @21)
+  , (22, roundAt @22)
+  , (23, roundAt @23)
+  , (24, roundAt @24)
+  , (25, roundAt @25)
+  , (26, roundAt @26)
+  , (27, roundAt @27)
+  , (28, roundAt @28)
+  , (29, roundAt @29)
+  , (30, roundAt @30)
+  , (31, roundAt @31)
+  , (32, roundAt @32)
+  , (33, roundAt @33)
+  , (34, roundAt @34)
+  , (35, roundAt @35)
+  , (36, roundAt @36)
+  , (37, roundAt @37)
+  ]
+
+
+roundDecimalAtInt : Int -> RoundingMode -> Decimal -> Decimal
+roundDecimalAtInt i =  O.fromSome $ M.lookup i roundDecimalMap
