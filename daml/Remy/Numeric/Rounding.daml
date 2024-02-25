@@ -1,0 +1,129 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
+module Remy.Numeric.Rounding
+  ( RoundingMode(..)
+  , round
+  , roundAt
+  , roundUp
+  , roundDown
+  , roundCeling
+  , roundFloor
+  , roundHalfUp
+  , roundHalfDown
+  , roundHalfCeling
+  , roundHalfFloor
+  , roundHalfEven
+  ) where
+
+import DA.Numeric
+import Prelude hiding 
+  ( Down
+  , round
+  -- include the following lines for Daml 2.8.x
+  -- , RoundingMode
+  -- , RoundingUp
+  -- , RoundingDown
+  -- , RoundingCeling
+  -- , RoundingFloor 
+  -- , RoundingHalfUp
+  -- , RoundingHalfDown
+  -- , RoundingHalfEven
+  -- , RoundingUnnecessary
+  )
+
+
+data RoundingMode = 
+    RoundingUp
+  | RoundingDown
+  | RoundingCeling
+  | RoundingFloor 
+  | RoundingHalfUp
+  | RoundingHalfDown
+  | RoundingHalfEven
+  | RoundingUnnecessary
+
+zero0 : Numeric 0
+zero0 = 0.0
+
+one0 : Numeric 0
+one0 = 1.0
+
+roundHalfEven : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundHalfEven = castAndRound
+
+roundCeling : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundCeling x = 
+    if (x <= cast r) then
+      r
+    else 
+      r + shift one0
+  where
+    r = roundHalfEven @m @n x
+
+roundFloor : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundFloor x = 
+    if (cast r <= x) then
+      r
+    else 
+      r - shift one0
+  where
+    r = roundHalfEven @m @n x
+
+roundUp : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundUp x =
+  if (cast zero0 <= x) then
+    roundCeling x
+  else 
+    roundFloor x
+
+roundDown : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundDown x =
+  if (cast zero0 <= x) then
+    roundFloor x
+  else 
+    roundCeling x
+
+roundHalfCeling: forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundHalfCeling x =
+    if (x <= cast r) then
+      r
+    else 
+      roundHalfEven (x + shift one0)
+  where 
+    r = roundHalfEven @m @n x
+
+roundHalfFloor: forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundHalfFloor x =
+    if (cast r <= x) then
+      r
+    else 
+      roundHalfEven (x - shift one0)
+  where 
+    r = roundHalfEven @m @n x
+
+roundHalfUp : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundHalfUp x =
+  if (cast zero0 <= x) then
+    roundHalfCeling x
+  else 
+    roundHalfFloor x
+
+roundHalfDown : forall m n. (NumericScale m, NumericScale n) => Numeric m -> Numeric n
+roundHalfDown x =
+  if (cast zero0 <= x) then
+    roundFloor x
+  else 
+    roundCeling x
+
+round : forall m n. (NumericScale m, NumericScale n) => RoundingMode -> Numeric n -> Numeric m
+round RoundingUp = roundUp 
+round RoundingDown = roundDown
+round RoundingCeling = roundCeling
+round RoundingFloor = roundFloor
+round RoundingHalfUp = roundHalfUp
+round RoundingHalfDown = roundHalfDown
+round RoundingHalfEven = roundHalfEven 
+round RoundingUnnecessary = cast
+
+roundAt : forall m n. (NumericScale m, NumericScale n) => RoundingMode -> Numeric n -> Numeric n
+roundAt m x = cast $ round @m m x
