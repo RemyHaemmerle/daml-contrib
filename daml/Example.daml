@@ -15,16 +15,9 @@ modes =
   , N.RoundingHalfEven
   ]
 
-example1Data : [Numeric 2]
-example1Data = [0.55, 0.25, 0.16, 0.11, 0.10, -0.10, -0.11, -0.16, -0.25, -0.55]
+example1Data : [Decimal]
+example1Data = [0.055, 0.025, 0.016, 0.011, 0.010, -0.010, -0.011, -0.016, -0.025, -0.055]
 
-example1 : Script [[Numeric 2]]
+example1 : Script [[Decimal]]
 example1 = script $
-  pure $ map (\m -> map (N.roundAt @1 m) example1Data) modes
-
-example2Data : [Decimal]
-example2Data = [0.055, 0.025, 0.016, 0.011, 0.010, -0.010, -0.011, -0.016, -0.025, -0.055]
-
-example2 : Script [[Decimal]]
-example2 = script $
-  pure $ map (\m -> map (N.roundDecimalAtInt 2 m) example2Data) modes
+  pure $ map (\m -> map (N.roundDecimalAtInt 2 m) example1Data) modes
