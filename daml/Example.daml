@@ -20,4 +20,4 @@ example1Data = [0.055, 0.025, 0.016, 0.011, 0.010, -0.010, -0.011, -0.016, -0.02
 
 example1 : Script [[Decimal]]
 example1 = script $
-  pure $ map (\m -> map (N.roundDecimalAtInt 2 m) example1Data) modes
+    pure $ map (\m -> map (N.round m 2) example1Data) modes
