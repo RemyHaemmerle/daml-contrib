@@ -46,10 +46,10 @@ roundCeling x =
 
 roundFloor : forall n. NumericScale n => Numeric 37 -> Numeric n
 roundFloor x =
-    if (zero  <= x) then
+    if (cast r <= x) then
       r
     else
-      r + shift one
+      r - shift one
     where
       r = roundHalfEven x
 
